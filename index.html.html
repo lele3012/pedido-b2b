@@ -1,0 +1,583 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Pedido B2B – Lelé da Kuka</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+<style>
+  :root {
+    --green: #2a7a3b;
+    --green-light: #e8f5eb;
+    --cream: #f5f2ed;
+    --ink: #1a1a1a;
+    --muted: #888;
+    --border: #e0dbd3;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+  body { background: var(--cream); font-family: 'Segoe UI', system-ui, sans-serif; color: var(--ink); min-height: 100vh; max-width: 480px; margin: 0 auto; }
+
+  .topbar { background: var(--green); color: white; padding: 14px 18px; display: flex; align-items: center; gap: 10px; position: sticky; top: 0; z-index: 100; }
+  .topbar-logo { font-size: 22px; }
+  .topbar-title { font-size: 15px; font-weight: 700; }
+  .topbar-sub { font-size: 11px; opacity: 0.7; }
+
+  .tabs { display: flex; background: white; border-bottom: 2px solid var(--border); position: sticky; top: 52px; z-index: 99; }
+  .tab { flex: 1; padding: 11px 4px; text-align: center; font-size: 11px; font-weight: 700; color: var(--muted); cursor: pointer; border-bottom: 2.5px solid transparent; margin-bottom: -2px; user-select: none; }
+  .tab.ativo { color: var(--green); border-bottom-color: var(--green); }
+  .tab-icon { font-size: 16px; display: block; margin-bottom: 2px; }
+
+  .panel { display: none; padding: 18px 16px 40px; }
+  .panel.ativo { display: block; }
+
+  .section-title { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.1em; color: var(--muted); margin-bottom: 10px; margin-top: 18px; }
+
+  .field { display: flex; flex-direction: column; gap: 5px; margin-bottom: 12px; }
+  .field label { font-size: 13px; font-weight: 600; color: #555; }
+  .field-input { border: 1.5px solid var(--border); border-radius: 10px; padding: 11px 14px; font-size: 16px; color: var(--ink); outline: none; background: white; font-family: inherit; width: 100%; }
+  .field-input:focus { border-color: var(--green); }
+  textarea.field-input { resize: vertical; min-height: 80px; }
+
+  .produto-grupo { border: 1.5px solid var(--border); border-radius: 12px; overflow: hidden; margin-bottom: 8px; }
+  .produto-grupo-head { background: #f7f5f1; padding: 10px 14px; display: flex; align-items: center; justify-content: space-between; }
+  .produto-grupo-nome { font-size: 13px; font-weight: 700; }
+  .produto-grupo-preco { font-size: 11px; color: var(--green); font-weight: 700; background: var(--green-light); padding: 3px 9px; border-radius: 20px; }
+  .produto-grupo-body { padding: 10px 12px; display: flex; flex-direction: column; gap: 8px; border-top: 1px solid var(--border); }
+
+  .item-row-header { display: flex; gap: 8px; padding: 0 2px; }
+  .lbl { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em; color: #bbb; }
+  .lbl-sabor { flex: 1; }
+  .lbl-qtd { width: 72px; text-align: center; }
+  .lbl-del { width: 36px; }
+
+  .item-row { display: flex; gap: 8px; align-items: center; }
+  .input-sabor { flex: 1; border: 1.5px solid var(--border); border-radius: 8px; padding: 10px; font-size: 15px; outline: none; font-family: inherit; background: white; color: var(--ink); }
+  .input-sabor:focus { border-color: var(--green); }
+  .input-qtd { width: 72px; border: 1.5px solid var(--border); border-radius: 8px; padding: 10px 6px; font-size: 16px; outline: none; text-align: center; font-family: inherit; background: white; color: var(--ink); }
+  .input-qtd:focus { border-color: var(--green); }
+  .remove-btn { width: 36px; height: 40px; border: none; background: #fdecea; color: #c0392b; border-radius: 8px; cursor: pointer; font-size: 15px; flex-shrink: 0; }
+
+  .add-item-btn { width: 100%; padding: 10px; border: 1.5px dashed var(--border); background: transparent; border-radius: 8px; color: var(--green); font-size: 13px; font-weight: 600; cursor: pointer; font-family: inherit; }
+
+  .action-group { display: flex; flex-direction: column; gap: 10px; margin-top: 24px; }
+  .btn-primary { width: 100%; padding: 15px; background: var(--green); color: white; border: none; border-radius: 12px; font-size: 15px; font-weight: 700; cursor: pointer; font-family: inherit; }
+  .btn-secondary { width: 100%; padding: 14px; background: white; color: var(--green); border: 1.5px solid var(--green); border-radius: 12px; font-size: 14px; font-weight: 600; cursor: pointer; font-family: inherit; }
+
+  #card-preview { background: white; border-radius: 18px; overflow: hidden; box-shadow: 0 6px 30px rgba(0,0,0,0.12); margin-bottom: 20px; }
+  .card-head { background: linear-gradient(135deg, #2a7a3b 0%, #1f5e2c 100%); padding: 16px 20px; display: flex; align-items: center; gap: 12px; }
+  .card-head-icon { width: 42px; height: 42px; background: rgba(255,255,255,0.18); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 20px; flex-shrink: 0; }
+  .card-head-brand { font-size: 10px; color: rgba(255,255,255,0.7); text-transform: uppercase; letter-spacing: 0.1em; margin-bottom: 3px; }
+  .card-head-title { font-size: 17px; font-weight: 800; color: white; }
+  .card-body { padding: 18px; display: flex; flex-direction: column; gap: 14px; }
+  .card-hr { height: 1px; background: var(--border); }
+  .card-info-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+  .card-info-box { background: #f7f5f1; border-radius: 10px; padding: 9px 12px; }
+  .card-info-box.full { grid-column: 1 / -1; }
+  .card-info-label { font-size: 9px; text-transform: uppercase; letter-spacing: 0.08em; color: #aaa; font-weight: 700; margin-bottom: 3px; }
+  .card-info-value { font-size: 13.5px; font-weight: 700; color: var(--ink); }
+  .card-section { background: #f7f5f1; border-radius: 12px; overflow: hidden; border: 1px solid var(--border); margin-bottom: 10px; }
+  .card-section-head { padding: 8px 14px; border-bottom: 1px solid var(--border); font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.1em; color: var(--muted); }
+  .card-item-row { display: flex; justify-content: space-between; align-items: center; padding: 9px 14px; border-bottom: 1px solid var(--border); gap: 8px; }
+  .card-item-row:last-child { border-bottom: none; }
+  .card-item-left { display: flex; flex-direction: column; gap: 2px; flex: 1; }
+  .card-item-name { font-size: 13.5px; font-weight: 700; color: #222; }
+  .card-item-sub { font-size: 15px; font-weight: 800; color: #222; }
+  .card-item-qty { font-weight: 800; color: var(--green); background: var(--green-light); border-radius: 20px; padding: 2px 10px; font-size: 12px; white-space: nowrap; flex-shrink: 0; }
+  .card-totais-grid { display: grid; gap: 8px; }
+  .card-tot-box { background: #f7f5f1; border: 1px solid var(--border); border-radius: 10px; padding: 9px 6px; text-align: center; }
+  .card-tot-box.destaque { background: linear-gradient(135deg, #2a7a3b, #1f5e2c); color: white; border: none; }
+  .card-tot-label { font-size: 8px; text-transform: uppercase; letter-spacing: 0.07em; font-weight: 700; color: #aaa; margin-bottom: 4px; }
+  .card-tot-box.destaque .card-tot-label { color: rgba(255,255,255,0.7); }
+  .card-tot-value { font-size: 17px; font-weight: 900; color: var(--ink); }
+  .card-tot-box.destaque .card-tot-value { color: white; font-size: 19px; }
+  .card-tot-unit { font-size: 9px; color: #aaa; margin-top: 1px; }
+  .card-tot-box.destaque .card-tot-unit { color: rgba(255,255,255,0.6); }
+  .card-pagamento { display: flex; align-items: center; gap: 8px; background: #f7f5f1; border-radius: 10px; padding: 10px 14px; }
+  .card-pagamento-label { font-size: 9px; text-transform: uppercase; letter-spacing: 0.08em; color: #aaa; font-weight: 700; margin-bottom: 2px; }
+  .card-pagamento-value { font-size: 13.5px; font-weight: 700; color: var(--ink); }
+  .card-footer { padding: 10px 20px 14px; text-align: center; font-size: 11.5px; color: #bbb; }
+
+  .preview-label { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.1em; color: var(--muted); margin-bottom: 12px; }
+
+  .wa-box { background: #111b21; border-radius: 14px; overflow: hidden; margin-bottom: 16px; }
+  .wa-box-head { background: #202c33; padding: 10px 14px; display: flex; align-items: center; justify-content: space-between; }
+  .wa-head-title { font-size: 12px; font-weight: 700; color: #8696a0; text-transform: uppercase; letter-spacing: 0.08em; }
+  .wa-copy-btn { background: #005c4b; border: none; border-radius: 6px; color: #25d366; font-size: 12px; font-weight: 700; padding: 6px 14px; cursor: pointer; font-family: inherit; }
+  .wa-text { padding: 14px 16px; font-family: 'Courier New', monospace; font-size: 13px; line-height: 1.9; color: #e9edef; white-space: pre-wrap; }
+  .wb { font-weight: 800; color: #fff; }
+  .wg { color: #25d366; }
+
+  .toast { display: none; position: fixed; bottom: 28px; left: 50%; transform: translateX(-50%); background: #25d366; color: #111; font-size: 14px; font-weight: 700; padding: 10px 24px; border-radius: 24px; z-index: 999; white-space: nowrap; }
+
+  .modal-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.88); z-index: 1000; flex-direction: column; align-items: center; justify-content: center; gap: 16px; padding: 20px; }
+  .modal-overlay.ativo { display: flex; }
+  .modal-overlay img { max-width: 100%; max-height: 65vh; border-radius: 14px; }
+  .modal-dica { color: #aaa; font-size: 12.5px; text-align: center; line-height: 1.7; max-width: 300px; }
+  .modal-dica strong { color: #fff; }
+  .modal-btns { display: flex; gap: 10px; }
+  .modal-baixar { background: var(--green); border: none; color: #fff; padding: 12px 28px; border-radius: 24px; font-size: 14px; font-weight: 700; cursor: pointer; font-family: inherit; }
+  .modal-fechar { background: #333; border: none; color: #fff; padding: 12px 28px; border-radius: 24px; font-size: 14px; font-weight: 700; cursor: pointer; font-family: inherit; }
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <div class="topbar-logo">🥪</div>
+  <div>
+    <div class="topbar-title">Pedido B2B – Confirmação</div>
+    <div class="topbar-sub">Lelé da Kuka</div>
+  </div>
+</div>
+
+<div class="tabs">
+  <div class="tab ativo" id="tab-formulario"><span class="tab-icon">📋</span>Pedido</div>
+  <div class="tab" id="tab-preview"><span class="tab-icon">🖼️</span>Card</div>
+  <div class="tab" id="tab-whatsapp"><span class="tab-icon">💬</span>WhatsApp</div>
+</div>
+
+<!-- FORMULÁRIO -->
+<div class="panel ativo" id="panel-formulario">
+
+  <div class="section-title" style="margin-top:0">📋 Dados do pedido</div>
+  <div class="field">
+    <label>Cliente</label>
+    <input type="text" id="f-cliente" class="field-input" placeholder="Ex: Hannah Praia">
+  </div>
+  <div class="field">
+    <label>Data do pedido</label>
+    <input type="text" id="f-data" class="field-input" placeholder="Ex: 08/06">
+  </div>
+  <div class="field">
+    <label>Entrega</label>
+    <select id="f-entrega" class="field-input">
+      <option value="D+1">D+1 (dia seguinte)</option>
+      <option value="D+2">D+2</option>
+      <option value="D+3">D+3</option>
+      <option value="Hoje">Hoje</option>
+      <option value="Agendado">Agendado</option>
+    </select>
+  </div>
+
+  <div class="section-title">🥪 Sanduíches</div>
+  <div class="produto-grupo">
+    <div class="produto-grupo-head">
+      <span class="produto-grupo-nome">⬜ Pão Bola</span>
+      <span class="produto-grupo-preco">R$ 8,50 / un</span>
+    </div>
+    <div class="produto-grupo-body">
+      <div class="item-row-header">
+        <span class="lbl lbl-sabor">Sabor</span>
+        <span class="lbl lbl-qtd">Qtd</span>
+        <span class="lbl lbl-del"></span>
+      </div>
+      <div id="list-bola"></div>
+      <button class="add-item-btn" id="add-bola">+ Sabor</button>
+    </div>
+  </div>
+  <div class="produto-grupo">
+    <div class="produto-grupo-head">
+      <span class="produto-grupo-nome">🟫 Pão Integral</span>
+      <span class="produto-grupo-preco">R$ 8,50 / un</span>
+    </div>
+    <div class="produto-grupo-body">
+      <div class="item-row-header">
+        <span class="lbl lbl-sabor">Sabor</span>
+        <span class="lbl lbl-qtd">Qtd</span>
+        <span class="lbl lbl-del"></span>
+      </div>
+      <div id="list-integral"></div>
+      <button class="add-item-btn" id="add-integral">+ Sabor</button>
+    </div>
+  </div>
+
+  <div class="section-title">🫕 Lasanhas</div>
+  <div class="produto-grupo">
+    <div class="produto-grupo-head">
+      <span class="produto-grupo-nome">🫕 Lasanha 250g</span>
+      <span class="produto-grupo-preco">R$ 11,00 / un</span>
+    </div>
+    <div class="produto-grupo-body">
+      <div class="item-row-header">
+        <span class="lbl lbl-sabor">Sabor</span>
+        <span class="lbl lbl-qtd">Qtd</span>
+        <span class="lbl lbl-del"></span>
+      </div>
+      <div id="list-las250"></div>
+      <button class="add-item-btn" id="add-las250">+ Sabor</button>
+    </div>
+  </div>
+  <div class="produto-grupo">
+    <div class="produto-grupo-head">
+      <span class="produto-grupo-nome">🫕 Lasanha 500g</span>
+      <span class="produto-grupo-preco">R$ 14,50 / un</span>
+    </div>
+    <div class="produto-grupo-body">
+      <div class="item-row-header">
+        <span class="lbl lbl-sabor">Sabor</span>
+        <span class="lbl lbl-qtd">Qtd</span>
+        <span class="lbl lbl-del"></span>
+      </div>
+      <div id="list-las500"></div>
+      <button class="add-item-btn" id="add-las500">+ Sabor</button>
+    </div>
+  </div>
+
+  <div class="section-title">💰 Financeiro</div>
+  <div class="field">
+    <label>Forma de pagamento</label>
+    <select id="f-pagamento" class="field-input">
+      <option value="Mensal">Mensal</option>
+      <option value="À vista">À vista</option>
+      <option value="Pix">Pix</option>
+      <option value="Cartão">Cartão</option>
+      <option value="Boleto">Boleto</option>
+      <option value="Semanal">Semanal</option>
+    </select>
+  </div>
+
+  <div class="section-title">📝 Observações</div>
+  <div class="field">
+    <textarea id="f-obs" class="field-input" placeholder="Ex: Entregar na parte de trás, sem cebola no frango…"></textarea>
+  </div>
+
+  <div class="action-group">
+    <button class="btn-primary" id="btn-gerar">🖼️ Gerar imagem para compartilhar</button>
+    <button class="btn-secondary" id="btn-copiar-wa">📋 Copiar texto WhatsApp</button>
+  </div>
+</div>
+
+<!-- CARD -->
+<div class="panel" id="panel-preview">
+  <div class="preview-label">📱 Preview do card</div>
+  <div id="card-preview">
+    <div class="card-head">
+      <div class="card-head-icon">🥪</div>
+      <div>
+        <div class="card-head-brand">Lelé da Kuka</div>
+        <div class="card-head-title">Pedido Confirmado</div>
+      </div>
+    </div>
+    <div class="card-body">
+      <div class="card-info-grid">
+        <div class="card-info-box full">
+          <div class="card-info-label">👤 Cliente</div>
+          <div class="card-info-value" id="p-cliente">—</div>
+        </div>
+        <div class="card-info-box">
+          <div class="card-info-label">📅 Data</div>
+          <div class="card-info-value" id="p-data">—</div>
+        </div>
+        <div class="card-info-box">
+          <div class="card-info-label">🚚 Entrega</div>
+          <div class="card-info-value" id="p-entrega">—</div>
+        </div>
+      </div>
+      <div class="card-hr"></div>
+      <div id="p-secoes"></div>
+      <div class="card-totais-grid" id="p-totais"></div>
+      <div class="card-pagamento">
+        <div style="font-size:16px">💳</div>
+        <div>
+          <div class="card-pagamento-label">Pagamento</div>
+          <div class="card-pagamento-value" id="p-pagamento">—</div>
+        </div>
+      </div>
+    </div>
+    <div id="p-obs-box" style="display:none;margin:0 18px 14px;background:#fffbe6;border:1px solid #f0d96a;border-radius:10px;padding:9px 13px;">
+      <div style="font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:0.08em;color:#b8860b;margin-bottom:3px;">📝 Observações</div>
+      <div id="p-obs" style="font-size:12.5px;color:#555;line-height:1.5;"></div>
+    </div>
+    <div class="card-footer">✅ Pedido recebido e confirmado! Qualquer dúvida é só chamar. 😊</div>
+  </div>
+  <div class="action-group">
+    <button class="btn-primary" id="btn-gerar2">🖼️ Gerar imagem para compartilhar</button>
+    <button class="btn-secondary" id="btn-voltar-card">← Voltar ao formulário</button>
+  </div>
+</div>
+
+<!-- WHATSAPP -->
+<div class="panel" id="panel-whatsapp">
+  <div class="preview-label">💬 Preview WhatsApp</div>
+  <div class="wa-box">
+    <div class="wa-box-head">
+      <div class="wa-head-title">💬 WhatsApp</div>
+      <button class="wa-copy-btn" id="btn-copiar-wa2">Copiar</button>
+    </div>
+    <div class="wa-text" id="wa-preview">—</div>
+  </div>
+  <div class="action-group">
+    <button class="btn-primary" id="btn-copiar-wa3">📋 Copiar texto WhatsApp</button>
+    <button class="btn-secondary" id="btn-voltar-wa">← Voltar ao formulário</button>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+<div class="modal-overlay" id="modal">
+  <img id="modal-img" src="" alt="Pedido">
+  <div class="modal-dica">📱 <strong>Pressione e segure</strong> a imagem → Salvar ou Compartilhar</div>
+  <div class="modal-btns">
+    <button class="modal-baixar" id="modal-baixar-btn">⬇️ Baixar</button>
+    <button class="modal-fechar" id="modal-fechar-btn">✕ Fechar</button>
+  </div>
+</div>
+
+<script>
+var PRODUTOS = {
+  bola:     { nome: 'Pão Bola',     icone: '⬜', preco: 8.50,  tipo: 'sanduiche' },
+  integral: { nome: 'Pão Integral', icone: '🟫', preco: 8.50,  tipo: 'sanduiche' },
+  las250:   { nome: 'Lasanha 250g', icone: '🫕', preco: 11.00, tipo: 'lasanha'   },
+  las500:   { nome: 'Lasanha 500g', icone: '🫕', preco: 14.50, tipo: 'lasanha'   }
+};
+
+var itens = {
+  bola:     [{ sabor: 'Frango', qtd: 10 }],
+  integral: [{ sabor: 'Atum',   qtd: 5  }],
+  las250:   [],
+  las500:   []
+};
+
+function mudarAba(aba) {
+  ['formulario','preview','whatsapp'].forEach(function(id) {
+    document.getElementById('panel-' + id).classList.toggle('ativo', id === aba);
+    document.getElementById('tab-' + id).classList.toggle('ativo', id === aba);
+  });
+  window.scrollTo(0, 0);
+}
+
+function fmtVal(n) { return 'R$ ' + n.toFixed(2).replace('.', ','); }
+
+function renderGrupo(key) {
+  var list = document.getElementById('list-' + key);
+  list.innerHTML = '';
+  for (var i = 0; i < itens[key].length; i++) {
+    (function(idx) {
+      var row = document.createElement('div');
+      row.className = 'item-row';
+
+      var inputSabor = document.createElement('input');
+      inputSabor.type = 'text';
+      inputSabor.className = 'input-sabor';
+      inputSabor.placeholder = 'Ex: Frango, Carne…';
+      inputSabor.value = itens[key][idx].sabor;
+      inputSabor.addEventListener('input', function() {
+        itens[key][idx].sabor = this.value;
+        atualizarPreview();
+      });
+
+      var inputQtd = document.createElement('input');
+      inputQtd.type = 'number';
+      inputQtd.className = 'input-qtd';
+      inputQtd.min = '0';
+      inputQtd.setAttribute('inputmode', 'numeric');
+      inputQtd.value = itens[key][idx].qtd;
+      inputQtd.addEventListener('input', function() {
+        itens[key][idx].qtd = parseInt(this.value) || 0;
+        atualizarPreview();
+      });
+
+      var btn = document.createElement('button');
+      btn.className = 'remove-btn';
+      btn.textContent = '✕';
+      btn.addEventListener('click', function() {
+        itens[key].splice(idx, 1);
+        renderGrupo(key);
+        atualizarPreview();
+      });
+
+      row.appendChild(inputSabor);
+      row.appendChild(inputQtd);
+      row.appendChild(btn);
+      list.appendChild(row);
+    })(i);
+  }
+}
+
+function renderTodos() {
+  ['bola','integral','las250','las500'].forEach(function(k) { renderGrupo(k); });
+}
+
+function atualizarPreview() {
+  var cliente = document.getElementById('f-cliente').value.trim() || '—';
+  var data    = document.getElementById('f-data').value.trim()    || '—';
+  var entrega = document.getElementById('f-entrega').value;
+  var pagto   = document.getElementById('f-pagamento').value;
+  var obs     = document.getElementById('f-obs').value.trim();
+
+  document.getElementById('p-cliente').textContent   = cliente;
+  document.getElementById('p-data').textContent      = data;
+  document.getElementById('p-entrega').textContent   = entrega;
+  document.getElementById('p-pagamento').textContent = pagto;
+
+  var obsBox = document.getElementById('p-obs-box');
+  if (obs) { document.getElementById('p-obs').textContent = obs; obsBox.style.display = 'block'; }
+  else { obsBox.style.display = 'none'; }
+
+  var totalSandUn = 0, totalSandVal = 0, totalLasUn = 0, totalLasVal = 0;
+  var secoes = document.getElementById('p-secoes');
+  secoes.innerHTML = '';
+
+  var grupos = [
+    { keys: ['bola','integral'], titulo: '🥪 Sanduíches' },
+    { keys: ['las250','las500'], titulo: '🫕 Lasanhas' }
+  ];
+
+  var waSecoes = '';
+
+  grupos.forEach(function(g) {
+    var linhasHtml = [];
+    var linhasWa = [];
+    var temItem = false;
+
+    g.keys.forEach(function(key) {
+      var prod = PRODUTOS[key];
+      itens[key].forEach(function(it) {
+        if (!it.qtd) return;
+        temItem = true;
+        linhasHtml.push(
+          '<div class="card-item-row">' +
+            '<div class="card-item-left">' +
+              '<span class="card-item-name">' + prod.icone + ' ' + prod.nome + '</span>' +
+              (it.sabor ? '<span class="card-item-sub">↳ ' + it.sabor + '</span>' : '') +
+            '</div>' +
+            '<span class="card-item-qty">' + it.qtd + ' un</span>' +
+          '</div>'
+        );
+        linhasWa.push('  ' + prod.icone + ' *' + prod.nome + '*' + (it.sabor ? ' (' + it.sabor + ')' : '') + ' – *' + it.qtd + ' un*');
+        var val = it.qtd * prod.preco;
+        if (prod.tipo === 'sanduiche') { totalSandUn += it.qtd; totalSandVal += val; }
+        else { totalLasUn += it.qtd; totalLasVal += val; }
+      });
+    });
+
+    if (temItem) {
+      var sec = document.createElement('div');
+      sec.className = 'card-section';
+      sec.innerHTML = '<div class="card-section-head">' + g.titulo + '</div>' + linhasHtml.join('');
+      secoes.appendChild(sec);
+      waSecoes += '\n' + g.titulo + '\n' + linhasWa.join('\n') + '\n';
+    }
+  });
+
+  var totalUn  = totalSandUn + totalLasUn;
+  var totalVal = totalSandVal + totalLasVal;
+
+  var totDiv = document.getElementById('p-totais');
+  totDiv.innerHTML = '';
+  if (totalSandUn > 0 && totalLasUn > 0) {
+    totDiv.style.gridTemplateColumns = 'repeat(3,1fr)';
+    totDiv.innerHTML =
+      '<div class="card-tot-box"><div class="card-tot-label">Sanduíches</div><div class="card-tot-value">' + totalSandUn + '</div><div class="card-tot-unit">' + fmtVal(totalSandVal) + '</div></div>' +
+      '<div class="card-tot-box"><div class="card-tot-label">Lasanhas</div><div class="card-tot-value">' + totalLasUn + '</div><div class="card-tot-unit">' + fmtVal(totalLasVal) + '</div></div>' +
+      '<div class="card-tot-box destaque"><div class="card-tot-label">Total geral</div><div class="card-tot-value">' + fmtVal(totalVal) + '</div><div class="card-tot-unit">' + totalUn + ' unidades</div></div>';
+  } else {
+    totDiv.style.gridTemplateColumns = '1fr 1fr';
+    totDiv.innerHTML =
+      '<div class="card-tot-box"><div class="card-tot-label">Unidades</div><div class="card-tot-value">' + totalUn + '</div><div class="card-tot-unit">unidades</div></div>' +
+      '<div class="card-tot-box destaque"><div class="card-tot-label">Valor total</div><div class="card-tot-value">' + fmtVal(totalVal) + '</div></div>';
+  }
+
+  var waTotais = '*Total: ' + totalUn + ' unidades — ' + fmtVal(totalVal) + '*';
+  if (totalSandUn > 0 && totalLasUn > 0) {
+    waTotais = 'Sanduíches: ' + totalSandUn + ' un — ' + fmtVal(totalSandVal) + '\nLasanhas: ' + totalLasUn + ' un — ' + fmtVal(totalLasVal) + '\n*Total geral: ' + fmtVal(totalVal) + '*';
+  }
+
+  var waTexto =
+    '🥪 *LELÉ DA KUKA — PEDIDO CONFIRMADO*\n\n' +
+    '📅 *Data:* ' + data + '\n' +
+    '👤 *Cliente:* ' + cliente + '\n' +
+    '📍 *Entrega:* ' + entrega + '\n\n' +
+    '━━━━━━━━━━━━━━━\n' +
+    '📦 *ITENS DO PEDIDO*\n' +
+    '━━━━━━━━━━━━━━━\n' +
+    waSecoes.trim() + '\n\n' +
+    '━━━━━━━━━━━━━━━\n' +
+    waTotais + '\n' +
+    '💳 *Pagamento:* ' + pagto + '\n' +
+    '━━━━━━━━━━━━━━━\n\n' +
+    '✅ Pedido recebido e confirmado!\n' +
+    'Qualquer dúvida é só chamar. 😊' +
+    (obs ? '\n\n📝 *Obs:* ' + obs : '');
+
+  var waEl = document.getElementById('wa-preview');
+  waEl.innerHTML = waTexto
+    .replace(/&/g,'&amp;').replace(/</g,'&lt;')
+    .replace(/\*(.*?)\*/g, '<span class="wb">$1</span>')
+    .replace(/✅/g,'<span class="wg">✅</span>')
+    .replace(/😊/g,'<span class="wg">😊</span>');
+  waEl.dataset.plain = waTexto;
+}
+
+function copiarWhatsApp() {
+  var texto = document.getElementById('wa-preview').dataset.plain || '';
+  navigator.clipboard.writeText(texto).then(function() { mostrarToast('✅ Copiado!'); });
+}
+
+async function gerarImagem() {
+  mudarAba('preview');
+  var btn1 = document.getElementById('btn-gerar');
+  var btn2 = document.getElementById('btn-gerar2');
+  btn1.disabled = true; btn1.textContent = '⏳ Gerando...';
+  btn2.disabled = true; btn2.textContent = '⏳ Gerando...';
+  try {
+    var canvas = await html2canvas(document.getElementById('card-preview'), {
+      scale: 2.5, useCORS: true, backgroundColor: '#ffffff', logging: false
+    });
+    var url = canvas.toDataURL('image/png');
+    document.getElementById('modal-img').src = url;
+    document.getElementById('modal-baixar-btn').onclick = function() {
+      var a = document.createElement('a');
+      var nome = document.getElementById('f-cliente').value.trim() || 'pedido';
+      a.download = 'pedido-' + nome.replace(/\s+/g,'-').toLowerCase() + '.png';
+      a.href = url; a.click();
+    };
+    document.getElementById('modal').classList.add('ativo');
+  } catch(e) { mostrarToast('❌ Erro ao gerar imagem'); }
+  btn1.disabled = false; btn1.innerHTML = '🖼️ Gerar imagem para compartilhar';
+  btn2.disabled = false; btn2.innerHTML = '🖼️ Gerar imagem para compartilhar';
+}
+
+function mostrarToast(msg) {
+  var t = document.getElementById('toast');
+  t.textContent = msg; t.style.display = 'block';
+  setTimeout(function() { t.style.display = 'none'; }, 2500);
+}
+
+// Eventos das tabs
+document.getElementById('tab-formulario').addEventListener('click', function() { mudarAba('formulario'); });
+document.getElementById('tab-preview').addEventListener('click', function() { mudarAba('preview'); });
+document.getElementById('tab-whatsapp').addEventListener('click', function() { mudarAba('whatsapp'); });
+
+// Eventos dos botões add
+document.getElementById('add-bola').addEventListener('click', function() { itens.bola.push({sabor:'',qtd:0}); renderGrupo('bola'); atualizarPreview(); });
+document.getElementById('add-integral').addEventListener('click', function() { itens.integral.push({sabor:'',qtd:0}); renderGrupo('integral'); atualizarPreview(); });
+document.getElementById('add-las250').addEventListener('click', function() { itens.las250.push({sabor:'',qtd:0}); renderGrupo('las250'); atualizarPreview(); });
+document.getElementById('add-las500').addEventListener('click', function() { itens.las500.push({sabor:'',qtd:0}); renderGrupo('las500'); atualizarPreview(); });
+
+// Eventos dos campos principais
+document.getElementById('f-cliente').addEventListener('input', atualizarPreview);
+document.getElementById('f-data').addEventListener('input', atualizarPreview);
+document.getElementById('f-entrega').addEventListener('change', atualizarPreview);
+document.getElementById('f-pagamento').addEventListener('change', atualizarPreview);
+document.getElementById('f-obs').addEventListener('input', atualizarPreview);
+
+// Botões de ação
+document.getElementById('btn-gerar').addEventListener('click', gerarImagem);
+document.getElementById('btn-gerar2').addEventListener('click', gerarImagem);
+document.getElementById('btn-copiar-wa').addEventListener('click', copiarWhatsApp);
+document.getElementById('btn-copiar-wa2').addEventListener('click', copiarWhatsApp);
+document.getElementById('btn-copiar-wa3').addEventListener('click', copiarWhatsApp);
+document.getElementById('btn-voltar-card').addEventListener('click', function() { mudarAba('formulario'); });
+document.getElementById('btn-voltar-wa').addEventListener('click', function() { mudarAba('formulario'); });
+document.getElementById('modal-fechar-btn').addEventListener('click', function() {
+  document.getElementById('modal').classList.remove('ativo');
+  document.getElementById('modal-img').src = '';
+});
+
+// Init
+document.getElementById('f-cliente').value = 'Hannah Praia';
+document.getElementById('f-data').value = '08/06';
+renderTodos();
+atualizarPreview();
+</script>
+</body>
+</html>
